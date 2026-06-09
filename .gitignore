@@ -1,0 +1,23 @@
+.DS_Store
+**/.DS_Store
+
+# Source/archive material is not part of the deployed website.
+assets/source/
+
+# Local temporary files
+*.log
+*.tmp
+*.swp
+.netlify/
+
+# Accidental nested local clone; the project root is the deployable repository.
+yanghongru-art/
+
+# Original video masters that exceed GitHub/production size targets.
+assets/works/video/《侵蚀》2020/《侵蚀》short.mp4
+assets/works/video/《看见》2019/《看见》的副本.MP4
+assets/works/video/眼睛2020/眼睛.mp4
+assets/works/video/河流2020/河流.mp4
+assets/works/video/《plants house》 2019/《plants house》_无音版的副本.mp4
+assets/works/video/《凝视白鹿原》2019/《凝视 . 白鹿原》 MP4的副本.MP4
+assets/works/video/迷魂2020/迷魂.mp4
