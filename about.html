@@ -21,7 +21,11 @@
     <main class="page">
       <h1 class="page-title">About <span>关于</span></h1>
       <section class="about-grid">
-        <img class="portrait" src="assets/portrait/个人形象照片.jpg" alt="Yang Hongru portrait">
+        <picture class="portrait optimized-picture">
+          <source srcset="assets/optimized/assets/portrait/个人形象照片-1600.avif" type="image/avif">
+          <source srcset="assets/optimized/assets/portrait/个人形象照片-1600.webp" type="image/webp">
+          <img class="portrait" src="assets/optimized/assets/portrait/个人形象照片-1600.webp" alt="Yang Hongru portrait" loading="lazy">
+        </picture>
         <div class="text-stack">
           <section class="text-block">
             <h2 class="section-title">Biography</h2>
@@ -59,6 +63,7 @@
 
     <footer class="footer">YANG HONGRU / 杨鸿儒</footer>
     <script src="data.js"></script>
+    <script src="optimized-images.js"></script>
     <script src="main.js"></script>
   </body>
 </html>

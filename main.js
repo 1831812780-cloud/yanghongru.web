@@ -8,9 +8,32 @@ function setCurrentNav() {
   });
 }
 
-function imageTag(src, alt, className = "") {
+function optimizedVariant(src, size = 1600) {
+  const manifest = window.optimizedImages || {};
+  const entry = manifest[src];
+  if (!entry) return null;
+  return entry[size] || entry[1600] || entry[900] || entry[2200] || null;
+}
+
+function imageTag(src, alt, className = "", options = {}) {
   if (!src) return `<div class="image-placeholder ${className}">${alt}</div>`;
-  return `<img src="${src}" alt="${alt}" class="${className}" loading="lazy">`;
+  const {
+    size = 1600,
+    loading = "lazy",
+    fetchpriority = "",
+    sizes = "(max-width: 767px) 100vw, 80vw"
+  } = options;
+  const variant = optimizedVariant(src, size);
+  const priorityAttr = fetchpriority ? ` fetchpriority="${fetchpriority}"` : "";
+  const baseImg = `<img src="${variant?.webp || src}" alt="${alt}" class="${className}" loading="${loading}"${priorityAttr} sizes="${sizes}">`;
+  if (!variant) return baseImg;
+  return `
+    <picture class="${className} optimized-picture">
+      <source srcset="${variant.avif}" type="image/avif">
+      <source srcset="${variant.webp}" type="image/webp">
+      ${baseImg}
+    </picture>
+  `;
 }
 
 function needsContent(value = "") {
@@ -28,13 +51,11 @@ function textSpan(value, className = "") {
 
 function mediaCover(work, className = "") {
   if (work.image || work.cover) {
-    return imageTag(work.cover || work.image, work.title, className);
+    return imageTag(work.cover || work.image, work.title, className, { size: 900 });
   }
 
   if (work.video) {
-    return `
-      <video class="${className} video-cover" src="${work.video}" preload="metadata" muted playsinline></video>
-    `;
+    return imageTag("", work.title, className);
   }
 
   return imageTag("", work.title, className);
@@ -58,7 +79,12 @@ function renderHome() {
   if (!heroEl || !featuredEl) return;
 
   heroEl.innerHTML = `
-    ${imageTag(hero.image, hero.title, "hero__image")}
+    ${imageTag(hero.image, hero.title, "hero__image", {
+      size: 1600,
+      loading: "eager",
+      fetchpriority: "high",
+      sizes: "100vw"
+    })}
     <div class="hero__overlay">
       ${hero.kicker ? `<span>${hero.kicker}</span>` : ""}
       <h1>${hero.title}</h1>
@@ -74,7 +100,12 @@ function renderHome() {
     <div class="featured-slider" data-featured-slider>
       ${featuredWorks.map((work, index) => `
         <a class="featured-slide${index === 0 ? " is-active" : ""}" href="works.html#painting">
-          ${imageTag(work.image, work.title, "featured__image")}
+          ${imageTag(work.image, work.title, "featured__image", {
+            size: index === 0 ? 1600 : 900,
+            loading: index === 0 ? "eager" : "lazy",
+            fetchpriority: index === 0 ? "high" : "",
+            sizes: "100vw"
+          })}
           <div class="featured-slide__meta">
             ${workMeta(work)}
           </div>
@@ -120,7 +151,7 @@ function renderWorks() {
             <span class="meta">${item.zh}</span>
           </h2>
           <a class="research-card" href="research.html">
-            ${imageTag(researchProjects[0].hero, researchProjects[0].title, "research-card__image")}
+            ${imageTag(researchProjects[0].hero, researchProjects[0].title, "research-card__image", { size: 900 })}
             <div class="research-card__text">
               <span>${researchProjects[0].displayTitleEn}</span>
               <strong>${researchProjects[0].displayTitle}</strong>
@@ -140,7 +171,7 @@ function renderWorks() {
         <div class="work-grid">
           ${grouped.map((work) => `
             <a class="work-card" href="work.html?slug=${work.slug}">
-              ${imageTag(work.image, work.title)}
+              ${imageTag(work.image, work.title, "", { size: 900, sizes: "(max-width: 767px) 100vw, 50vw" })}
               ${workMeta(work)}
             </a>
           `).join("")}
@@ -213,7 +244,10 @@ function renderWorkDetail() {
 
   el.innerHTML = `
     <div class="detail-layout${work.hideDetailImage ? " detail-layout--without-image" : ""}">
-      ${work.hideDetailImage ? "" : imageTag(work.image, work.title, "detail-image")}
+      ${work.hideDetailImage ? "" : imageTag(work.image, work.title, "detail-image", {
+        size: 2200,
+        sizes: "(max-width: 767px) 100vw, 90vw"
+      })}
       <section class="detail-info">
         <p class="eyebrow">Works / ${work.seriesEn} / ${work.seriesZh}</p>
         <h1 class="page-title">${work.title}</h1>
@@ -243,13 +277,19 @@ function renderPaintingExtras(work) {
       ${detailImages.length ? `
         <h2 class="section-title">Details</h2>
         <div class="detail-gallery">
-          ${detailImages.map((src) => imageTag(src, `${work.title} detail`)).join("")}
+          ${detailImages.map((src) => imageTag(src, `${work.title} detail`, "", {
+            size: 1600,
+            sizes: "(max-width: 767px) 100vw, 50vw"
+          })).join("")}
         </div>
       ` : ""}
       ${installationImages.length ? `
         <h2 class="section-title">Installation</h2>
         <div class="installation-gallery">
-          ${installationImages.map((src) => imageTag(src, `${work.title} installation`)).join("")}
+          ${installationImages.map((src) => imageTag(src, `${work.title} installation`, "", {
+            size: 1600,
+            sizes: "100vw"
+          })).join("")}
         </div>
       ` : ""}
     </section>
@@ -261,7 +301,7 @@ function renderVideoDetail(work, previous, next) {
     return `
       <article class="video-detail video-detail--featured">
         <section class="video-hero">
-          ${work.poster ? imageTag(work.poster, `${work.title} poster`, "video-poster") : mediaCover(work, "video-poster")}
+          ${work.poster ? imageTag(work.poster, `${work.title} poster`, "video-poster", { size: 900 }) : mediaCover(work, "video-poster")}
           <div class="video-hero__text">
             <p class="eyebrow">Works / Video / 影像</p>
             <h1 class="page-title">${work.title}<span>${work.titleEn ? ` / ${work.titleEn}` : ""}</span></h1>
@@ -272,7 +312,7 @@ function renderVideoDetail(work, previous, next) {
             </dl>
           </div>
         </section>
-        ${work.cover ? imageTag(work.cover, `${work.title} horizontal poster`, "video-wide-poster") : ""}
+        ${work.cover ? imageTag(work.cover, `${work.title} horizontal poster`, "video-wide-poster", { size: 1600 }) : ""}
         ${renderStills(work)}
         ${renderVideoPlayer(work)}
         ${renderBilingualText(work)}
@@ -313,7 +353,10 @@ function renderStills(work) {
     <section class="video-stills">
       <h2 class="section-title">Film Stills</h2>
       <div class="video-stills-grid">
-        ${stills.map((src) => imageTag(src, `${work.title} still`)).join("")}
+        ${stills.map((src) => imageTag(src, `${work.title} still`, "", {
+          size: 900,
+          sizes: "(max-width: 767px) 100vw, 50vw"
+        })).join("")}
       </div>
     </section>
   `;
@@ -404,7 +447,10 @@ function renderResearch() {
 
   listEl.innerHTML = researchProjects.map((project) => `
     <a class="research-card" href="research-detail.html?slug=${project.slug}" id="${project.slug}">
-      ${imageTag(project.hero, project.title, "research-card__image")}
+      ${imageTag(project.hero, project.title, "research-card__image", {
+        size: 900,
+        sizes: "(max-width: 767px) 100vw, 50vw"
+      })}
       <div class="research-card__text">
         <strong style="font-size: clamp(18px, 2vw, 26px); line-height: 1.25;">${project.displayTitleEn || project.title}</strong>
         <span class="research-card__title-zh" style="font-size: clamp(18px, 2vw, 26px); line-height: 1.25;">${project.displayTitle || project.titleZh || project.title}</span>
@@ -424,14 +470,20 @@ function renderResearchDetail() {
   el.innerHTML = `
     <article class="research-project">
       <section class="research-hero">
-        ${imageTag(project.hero, project.title)}
+        ${imageTag(project.hero, project.title, "", {
+          size: 1600,
+          sizes: "(max-width: 767px) 100vw, 60vw"
+        })}
         <div class="research-hero__text">
           <p class="eyebrow">Research / ${project.category}</p>
           <h1 class="page-title research-title">${project.title}<span> / ${project.titleZh}</span></h1>
           <p>${project.intro}</p>
         </div>
       </section>
-      ${project.artwork ? imageTag(project.artwork, project.title, "research-artwork") : ""}
+      ${project.artwork ? imageTag(project.artwork, project.title, "research-artwork", {
+        size: 1600,
+        sizes: "(max-width: 767px) 100vw, 70vw"
+      }) : ""}
       <section class="research-two-column">
         <div>
           <h2 class="section-title">中文</h2>
@@ -473,7 +525,10 @@ function renderResearchReferences(project) {
       <div class="research-reference-grid">
         ${references.map((reference) => `
           <figure class="research-reference research-reference--${reference.size}${reference.note ? " research-reference--with-note" : ""}">
-            ${imageTag(reference.image, reference.title)}
+            ${imageTag(reference.image, reference.title, "", {
+              size: 900,
+              sizes: "(max-width: 767px) 100vw, 33vw"
+            })}
             <figcaption>
               <span>${reference.title}</span>
               ${reference.note ? `<em>${reference.note}</em>` : ""}

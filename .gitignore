@@ -10,6 +10,15 @@ assets/source/
 *.swp
 .netlify/
 
+# Original display images are kept locally; deployed pages use assets/optimized/.
+assets/**/*.png
+assets/**/*.PNG
+assets/**/*.jpg
+assets/**/*.JPG
+assets/**/*.jpeg
+assets/**/*.JPEG
+!assets/optimized/**
+
 # Accidental nested local clone; the project root is the deployable repository.
 yanghongru-art/
 
