@@ -82,7 +82,6 @@ const works = [
     year: "2023",
     material: "布面油画",
     dimensions: "220 cm * 164 cm",
-    hideDetailImage: true,
     description: "A visual meditation on Hegel, Nietzsche, and the uncertain spiritual landscape of the present.",
     installationImages: [
       "assets/works/research/研究1/黑白照片.png"
